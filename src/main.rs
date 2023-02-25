@@ -4,16 +4,19 @@
 #![test_runner(avo_os::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
+use avo_os::{memory::{self, BootInfoFrameAllocator}, println};
 use core::panic::PanicInfo;
-use avo_os::{println, memory};
 
-use bootloader::{BootInfo, entry_point};
-use x86_64::{VirtAddr, structures::paging::Translate};
+use bootloader::{entry_point, BootInfo};
+use x86_64::{
+    structures::paging::{Page, Translate},
+    VirtAddr,
+};
 
 #[cfg(not(test))]
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
-use avo_os::vga_buffer::{WRITER, ColorCode, Color};
+    use avo_os::vga_buffer::{Color, ColorCode, WRITER};
     let code = WRITER.lock().color_code;
     WRITER.lock().color_code = ColorCode::new(Color::LightRed, Color::Black);
     println!("PANIC: {}", _info);
@@ -29,7 +32,7 @@ fn panic(info: &PanicInfo) -> ! {
 
 entry_point!(kernel_main);
 
-fn kernel_main(boot_info : &'static BootInfo) -> ! {
+fn kernel_main(boot_info: &'static BootInfo) -> ! {
     println!("AvocadOS revision {}", 0);
     println!("version: {}.{}.{}", 0, 0, 0);
 
@@ -37,22 +40,17 @@ fn kernel_main(boot_info : &'static BootInfo) -> ! {
 
     let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
 
-    let mapper = unsafe { memory::init(phys_mem_offset) };
+    let mut mapper = unsafe { memory::init(phys_mem_offset) };
 
-    let addresses = 
-    [
-        0xb8000,
-        0x201008,
-        0x100_00201a10,
-        boot_info.physical_memory_offset
-    ];
+    let mut frame_allocator = unsafe {
+        BootInfoFrameAllocator::init(&boot_info.memory_map)
+    };
 
-    for &address in &addresses
-    {
-        let virt = VirtAddr::new(address);
-        let phys = mapper.translate_addr(virt);
-        println!("{:?} => {:?}", virt, phys);
-    }
+    let page = Page::containing_address(VirtAddr::new(0));
+    memory::create_example_mapping(page, &mut mapper, &mut frame_allocator);
+
+    let page_ptr: *mut u64 = page.start_address().as_mut_ptr();
+    unsafe { page_ptr.offset(400).write_volatile(0x_f021_f077_f065_f04e) };
 
     #[cfg(test)]
     test_main();
