@@ -26,6 +26,12 @@ pub fn init()
     println!("Initialising Interrupt Descriptor Table!");
     interrupts::init_idt();
 
+    println!("Initialising Programmable Interrupt Controller (Intel 8259)");
+    unsafe {interrupts::PICS.lock().initialize();}
+
+    println!("Enabling interrupts");
+    x86_64::instructions::interrupts::enable();
+
     println!("Initialisation Finished!");
  
     WRITER.lock().color_code = colour;
@@ -75,7 +81,7 @@ pub fn test_panic_handler(info: &PanicInfo) -> ! {
     serial_foreground(255, 0, 0);
     serial_println!("PANIC: {}", info);
     exit_qemu(QemuExitCode::Failed);
-    loop {}
+    hlt_loop();
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -101,11 +107,19 @@ pub fn exit_qemu(exit_code: QemuExitCode) {
 pub extern "C" fn _start() -> ! {
     init();
     test_main();
-    loop {}
+    hlt_loop();
 }
 
 #[cfg(test)]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     test_panic_handler(info)
+}
+
+pub fn hlt_loop() -> !
+{
+    loop
+    {
+        x86_64::instructions::hlt();
+    }
 }

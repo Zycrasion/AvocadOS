@@ -15,7 +15,7 @@ use avo_os::vga_buffer::{WRITER, ColorCode, Color};
     WRITER.lock().color_code = ColorCode::new(Color::LightRed, Color::Black);
     println!("PANIC: {}", _info);
     WRITER.lock().color_code = code;
-    loop {}
+    avo_os::hlt_loop();
 }
 
 #[cfg(test)]
@@ -31,10 +31,12 @@ pub extern "C" fn _start() -> ! {
     
     avo_os::init();
 
+
+
     #[cfg(test)]
     test_main();
 
-    loop {}
+    avo_os::hlt_loop();
 }
 
 #[test_case]

@@ -130,6 +130,8 @@ impl fmt::Write for Writer {
 use lazy_static::lazy_static;
 use spin::Mutex;
 
+use crate::interrupts;
+
 lazy_static! {
     pub static ref WRITER : Mutex<Writer> = Mutex::new(Writer {
         column_position : 0,
@@ -158,7 +160,11 @@ macro_rules! println {
 #[doc(hidden)]
 pub fn _print(args: fmt::Arguments) {
     use core::fmt::Write;
-    WRITER.lock().write_fmt(args).unwrap();
+    use x86_64::instructions::interrupts;
+
+    interrupts::without_interrupts(|| {
+        WRITER.lock().write_fmt(args).unwrap();
+    });
 }
 
 #[test_case]
@@ -178,10 +184,16 @@ fn test_println_many()
 
 #[test_case]
 fn test_println_output() {
-    let s = "Some test string that fits on a single line";
-    println!("{}", s);
-    for (i, c) in s.chars().enumerate() {
-        let screen_char = WRITER.lock().buffer.chars[BUFFER_HEIGHT - 2][i].read();
-        assert_eq!(char::from(screen_char.ascii_character), c);
-    }
+    use x86_64::instructions::interrupts::without_interrupts;
+    use core::fmt::Write;
+
+    without_interrupts(|| {
+        let mut writer = WRITER.lock();
+        let s = "Some test string that fits on a single line";
+        writeln!(writer, "\n{}", s).expect("writeln failed");
+        for (i, c) in s.chars().enumerate() {
+            let screen_char = writer.buffer.chars[BUFFER_HEIGHT - 2][i].read();
+            assert_eq!(char::from(screen_char.ascii_character), c);
+        }
+    })
 }
