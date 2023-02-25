@@ -1,4 +1,3 @@
-use pc_keyboard::KeyEvent;
 use x86_64::{structures::idt::{InterruptDescriptorTable, InterruptStackFrame, PageFaultErrorCode}, instructions::port::Port, registers::control::Cr2};
 use crate::{println, vga_buffer::{WRITER, ColorCode, Color}, print, hlt_loop};
 

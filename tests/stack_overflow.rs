@@ -3,7 +3,7 @@
 #![feature(abi_x86_interrupt)]
 use core::panic::PanicInfo;
 
-use avo_os::{serial::{self, serial_foreground, serial_reset_colour}, serial_print, serial_println};
+use avo_os::{serial::{serial_foreground, serial_reset_colour}, serial_print, serial_println};
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {

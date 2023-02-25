@@ -130,8 +130,6 @@ impl fmt::Write for Writer {
 use lazy_static::lazy_static;
 use spin::Mutex;
 
-use crate::interrupts;
-
 lazy_static! {
     pub static ref WRITER : Mutex<Writer> = Mutex::new(Writer {
         column_position : 0,
