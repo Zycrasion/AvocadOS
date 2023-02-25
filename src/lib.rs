@@ -12,16 +12,22 @@ use crate::{serial::{serial_foreground, serial_reset_colour}, vga_buffer::{WRITE
 pub mod serial;
 pub mod vga_buffer;
 pub mod interrupts;
-
+pub mod gdt;
 
 pub fn init()
 {
     let colour = WRITER.lock().color_code;
     WRITER.lock().color_code = ColorCode::new(Color::Green, Color::Black);
     println!("Starting AvocadOS Initialisation");
+
+    println!("Initialising Global Descriptor Table!");
+    gdt::init();
+
     println!("Initialising Interrupt Descriptor Table!");
     interrupts::init_idt();
+
     println!("Initialisation Finished!");
+ 
     WRITER.lock().color_code = colour;
 }
 
