@@ -45,7 +45,7 @@ const BUFFER_HEIGHT: usize = 25;
 const BUFFER_WIDTH: usize = 80;
 
 #[repr(transparent)]
-pub struct Buffer {
+struct Buffer {
     chars: [[Volatile<ScreenChar>; BUFFER_WIDTH]; BUFFER_HEIGHT],
 }
 
@@ -53,7 +53,7 @@ pub struct Writer
 {
     pub column_position : usize,
     pub color_code : ColorCode,
-    pub buffer: &'static mut Buffer,
+    buffer: &'static mut Buffer,
 }
 
 impl Writer
@@ -159,4 +159,29 @@ macro_rules! println {
 pub fn _print(args: fmt::Arguments) {
     use core::fmt::Write;
     WRITER.lock().write_fmt(args).unwrap();
+}
+
+#[test_case]
+fn test_println()
+{
+    println!("test_println");
+}
+
+#[test_case]
+fn test_println_many()
+{
+    for _ in 0..200
+    {
+        println!("test_println_many")
+    }
+}
+
+#[test_case]
+fn test_println_output() {
+    let s = "Some test string that fits on a single line";
+    println!("{}", s);
+    for (i, c) in s.chars().enumerate() {
+        let screen_char = WRITER.lock().buffer.chars[BUFFER_HEIGHT - 2][i].read();
+        assert_eq!(char::from(screen_char.ascii_character), c);
+    }
 }
