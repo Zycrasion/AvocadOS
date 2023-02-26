@@ -3,8 +3,9 @@
 #![feature(custom_test_frameworks)]
 #![test_runner(avo_os::test_runner)]
 #![reexport_test_harness_main = "test_main"]
-
-use avo_os::{memory::{self, BootInfoFrameAllocator}, println};
+extern crate alloc;
+use alloc::{boxed::Box, vec::Vec, vec, rc::Rc};
+use avo_os::{memory::{self, BootInfoFrameAllocator}, println, allocator};
 use core::panic::PanicInfo;
 
 use bootloader::{entry_point, BootInfo};
@@ -45,12 +46,30 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     let mut frame_allocator = unsafe {
         BootInfoFrameAllocator::init(&boot_info.memory_map)
     };
-
+    
     let page = Page::containing_address(VirtAddr::new(0));
     memory::create_example_mapping(page, &mut mapper, &mut frame_allocator);
 
     let page_ptr: *mut u64 = page.start_address().as_mut_ptr();
-    unsafe { page_ptr.offset(400).write_volatile(0x_f021_f077_f065_f04e) };
+
+    allocator::init_heap(&mut mapper,&mut frame_allocator).expect("heap initialisation failed!");
+
+    let x = Box::new(41);
+    println!("x at: {:p}", x);
+
+    let mut vec = Vec::new();
+    for i in 0..500
+    {
+        vec.push(i);
+    }
+
+    println!("vec at {:p}", vec.as_slice());    
+
+    let ref_counted = Rc::new(vec![1,2,3]);
+    let cloned_reference = ref_counted.clone();
+    println!("count is {}", Rc::strong_count(&cloned_reference));
+    core::mem::drop(ref_counted);
+    println!("count is {}", Rc::strong_count(&cloned_reference));
 
     #[cfg(test)]
     test_main();
