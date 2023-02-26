@@ -4,13 +4,15 @@ use core::ptr::null_mut;
 
 pub mod bump;
 use bump::BumpAllocator;
+
+pub mod linked_list;
+use linked_list::LinkedListAllocator;
+
 pub const HEAP_START : usize = 0x_4444_4444_0000;
 pub const HEAP_SIZE : usize = 100 * 1024; // 1024 kilobytes
 
-use linked_list_allocator::LockedHeap;
-
 #[global_allocator]
-static ALLOCATOR: Locked<BumpAllocator> = Locked::new(BumpAllocator::new());
+static ALLOCATOR: Locked<LinkedListAllocator> = Locked::new(LinkedListAllocator::new());
 
 pub struct Dummy;
 
