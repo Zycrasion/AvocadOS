@@ -73,7 +73,7 @@ unsafe impl GlobalAlloc for Locked<FixedSizeAllocator>
     }
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-        use core::{mem, ptr::{self, NonNull}};
+        use core::{mem, ptr::{NonNull}};
 
         let mut allocator = self.lock();
         match FixedSizeAllocator::list_index(&layout)

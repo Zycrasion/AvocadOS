@@ -1,12 +1,12 @@
 use alloc::alloc::{GlobalAlloc, Layout};
-use x86_64::{structures::paging::{FrameAllocator, Size4KiB, mapper::MapToError, Page, page, PageTable, PageTableFlags, Mapper}, VirtAddr};
+use x86_64::{structures::paging::{FrameAllocator, Size4KiB, mapper::MapToError, Page, PageTableFlags, Mapper}, VirtAddr};
 use core::ptr::null_mut;
 
 pub mod bump;
-use bump::BumpAllocator;
+
 
 pub mod linked_list;
-use linked_list::LinkedListAllocator;
+
 
 
 pub mod fixed_size_block;
@@ -23,11 +23,11 @@ pub struct Dummy;
 
 unsafe impl GlobalAlloc for Dummy
 {
-    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+    unsafe fn alloc(&self, _layout: Layout) -> *mut u8 {
         null_mut()
     }
 
-    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+    unsafe fn dealloc(&self, _ptr: *mut u8, _layout: Layout) {
         panic!("dealloc should never be called")
     }
 }
