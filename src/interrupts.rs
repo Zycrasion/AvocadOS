@@ -1,5 +1,5 @@
 use x86_64::{structures::idt::{InterruptDescriptorTable, InterruptStackFrame, PageFaultErrorCode}, instructions::port::Port, registers::control::Cr2};
-use crate::{println, vga_buffer::{WRITER, ColorCode, Color}, print, hlt_loop};
+use crate::{println, vga_buffer::{WRITER, ColorCode, Color}, print, hlt_loop, avo_shell::SHELL};
 
 use crate::gdt;
 
@@ -103,8 +103,8 @@ extern "x86-interrupt" fn keyboard_interrupt_handler(
         {
             match key
             {
-                DecodedKey::Unicode(character) => print!("{}", character),
-                DecodedKey::RawKey(key) => print!("{:#?}",key)
+                DecodedKey::Unicode(character) => SHELL.key_press(character),
+                DecodedKey::RawKey(_key) => {}
             }
         }
     }

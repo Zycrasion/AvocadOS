@@ -54,22 +54,7 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
 
     allocator::init_heap(&mut mapper,&mut frame_allocator).expect("heap initialisation failed!");
 
-    let x = Box::new(41);
-    println!("x at: {:p}", x);
-
-    let mut vec = Vec::new();
-    for i in 0..500
-    {
-        vec.push(i);
-    }
-
-    println!("vec at {:p}", vec.as_slice());    
-
-    let ref_counted = Rc::new(vec![1,2,3]);
-    let cloned_reference = ref_counted.clone();
-    println!("count is {}", Rc::strong_count(&cloned_reference));
-    core::mem::drop(ref_counted);
-    println!("count is {}", Rc::strong_count(&cloned_reference));
+    println!("type ~ to enter kernel-debug mode");
 
     #[cfg(test)]
     test_main();
