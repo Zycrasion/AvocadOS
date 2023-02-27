@@ -90,9 +90,30 @@ impl Writer
             match byte 
             {
                 0x20..=0x7e | b'\n' => self.write_byte(byte),
-                _ => self.write_byte(0xfe)
+                _ => {
+                    self.write_byte(0xfe);
+                }
             }
         }
+    }
+
+    pub fn clear_current_line(&mut self)
+    {
+        self.clear_row(BUFFER_HEIGHT - 1);
+        self.column_position = 0;
+    }
+
+    pub fn get_last(&mut self) -> Option<(usize, usize)>
+    {
+        if self.column_position <= 0
+        {
+            return None;
+        }
+
+        let row = self.column_position;
+        let col = BUFFER_HEIGHT - 1;
+
+        return Some((row, col))
     }
 
     fn new_line(&mut self) {
@@ -129,6 +150,8 @@ impl fmt::Write for Writer {
 
 use lazy_static::lazy_static;
 use spin::Mutex;
+
+use crate::serial_println;
 
 lazy_static! {
     pub static ref WRITER : Mutex<Writer> = Mutex::new(Writer {

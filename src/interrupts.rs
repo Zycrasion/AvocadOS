@@ -104,7 +104,7 @@ extern "x86-interrupt" fn keyboard_interrupt_handler(
             match key
             {
                 DecodedKey::Unicode(character) => SHELL.key_press(character),
-                DecodedKey::RawKey(_key) => {}
+                DecodedKey::RawKey(_key) => {},
             }
         }
     }

@@ -1,51 +1,104 @@
 use alloc::{borrow::ToOwned, string::{String, ToString}};
 use lazy_static::lazy_static;
 
-use crate::println;
+mod echo;
 
-// TODO: Change this to be dynamic and not rely on vga_buffer
-pub const STDOUT_SIZE : usize = 25 * 80;
+use crate::{println, allocator::Locked, print, vga_buffer::{WRITER, ColorCode, Color}, serial_print, serial_println, avo_shell::echo::echo};
+
 
 lazy_static!
 {
-    pub static ref SHELL : AvoShell = AvoShell::new();
+    pub static ref SHELL : Locked<AvoShell> = Locked::<AvoShell>::new(AvoShell::new());
 }
 
 pub struct AvoShell
 {
     command_cache : String,
+    shell_start : String,
     enabled : bool
 }
 
 impl AvoShell
 {
-    fn new() -> Self
+    pub fn new() -> Self
     {
-        AvoShell
-        {
-            command_cache: String::from(""),
-            enabled : false
-        }
+        return AvoShell { command_cache: String::from(""), enabled: false, shell_start: String::from(">") }
     }
 
     pub fn consume(&mut self)
     {
-        println!("{}", &self.command_cache);
-    }
-
-    pub fn key_press(&mut self, input : char)
-    {
-        if !self.enabled
+        if &self.command_cache == ""
         {
             return;
         }
 
-        if input.to_string() == "\n"
+        let mut args = self.command_cache.split_whitespace();
+        let command = args.next().unwrap_or("");
+
+        if command == "" {return;}
+        
+        println!();
+
+        match command
         {
-            self.consume();
-        } else 
+            "echo" => {let _ = echo(&self.command_cache);},
+            _ => {println!("command not recognised!");}
+        }
+
+        self.command_cache = String::from("");
+    }
+
+    pub fn on_shell_enable(&mut self)
+    {
+        self.enabled = true;
+        WRITER.lock().color_code = ColorCode::new(Color::LightGreen, Color::Black);
+        println!("Welcome to the kernel debugger (AvoShell)");
+        self.on_newline();
+    }
+
+    pub fn on_newline(&mut self)
+    {
+        self.consume();
+        self.update_line();
+    }
+
+    pub fn on_backspace(&mut self)
+    {
+        self.command_cache.pop();
+        self.update_line();
+    }
+
+    pub fn update_line(&mut self)
+    {
+        WRITER.lock().clear_current_line();
+        print!("{} {}", self.shell_start,self.command_cache)
+    }
+
+    pub fn on_key(&mut self, input : &char)
+    {
+        self.command_cache.push(*input);
+        self.update_line();
+    }
+}
+
+impl Locked<AvoShell>
+{
+    pub fn key_press(&self, input : char)
+    {
+        let mut shell = self.lock();
+        if input == '~' && shell.enabled == false {shell.on_shell_enable(); return;}
+
+        if !shell.enabled
         {
-            self.command_cache.push(input);
+            return;
+        }
+        
+        match input
+        {
+            
+            '\n' => shell.on_newline(),
+            '\u{008}' => shell.on_backspace(),
+            _ => shell.on_key(&input)
         }
     }
 }
