@@ -2,8 +2,9 @@ use alloc::{borrow::ToOwned, string::{String, ToString}};
 use lazy_static::lazy_static;
 
 mod echo;
+mod shutdown;
 
-use crate::{println, allocator::Locked, print, vga_buffer::{WRITER, ColorCode, Color}, serial_print, serial_println, avo_shell::echo::echo};
+use crate::{println, allocator::Locked, print, vga_buffer::{WRITER, ColorCode, Color}, serial_print, serial_println, avo_shell::{echo::echo, shutdown::shutdown_cmd}};
 
 
 lazy_static!
@@ -42,6 +43,7 @@ impl AvoShell
         match command
         {
             "echo" => {let _ = echo(&self.command_cache);},
+            "shutdown" => {shutdown_cmd(&self.command_cache);}
             _ => {println!("command not recognised!");}
         }
 
