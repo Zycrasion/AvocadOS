@@ -4,7 +4,7 @@
 #![test_runner(avo_os::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 extern crate alloc;
-use alloc::{boxed::Box, vec::Vec, vec, rc::Rc};
+
 use avo_os::{memory::{self, BootInfoFrameAllocator}, println, allocator};
 use core::panic::PanicInfo;
 

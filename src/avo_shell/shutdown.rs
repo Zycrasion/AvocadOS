@@ -1,13 +1,13 @@
-use core::arch::asm;
+
 
 use alloc::string::String;
-use x86_64::instructions::port::Port;
+
 
 use crate::{println, exit_qemu, QemuExitCode};
 
 use super::env::{MODE, AvocadOSMode};
 
-pub fn shutdown_cmd(command_cache : &String)
+pub fn shutdown_cmd(_command_cache : &String)
 {
     let md = MODE.lock().value;
     match md

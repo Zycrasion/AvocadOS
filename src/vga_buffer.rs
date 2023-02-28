@@ -151,7 +151,7 @@ impl fmt::Write for Writer {
 use lazy_static::lazy_static;
 use spin::Mutex;
 
-use crate::serial_println;
+
 
 lazy_static! {
     pub static ref WRITER : Mutex<Writer> = Mutex::new(Writer {

@@ -1,11 +1,11 @@
-use alloc::{borrow::ToOwned, string::{String, ToString}};
+use alloc::{string::{String}};
 use lazy_static::lazy_static;
 
 mod echo;
 mod shutdown;
 mod env;
 
-use crate::{println, allocator::Locked, print, vga_buffer::{WRITER, ColorCode, Color}, serial_print, serial_println, avo_shell::{echo::echo, shutdown::shutdown_cmd}};
+use crate::{println, allocator::Locked, print, vga_buffer::{WRITER, ColorCode, Color}, avo_shell::{echo::echo, shutdown::shutdown_cmd}};
 
 
 lazy_static!
