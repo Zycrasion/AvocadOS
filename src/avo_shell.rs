@@ -3,6 +3,7 @@ use lazy_static::lazy_static;
 
 mod echo;
 mod shutdown;
+mod env;
 
 use crate::{println, allocator::Locked, print, vga_buffer::{WRITER, ColorCode, Color}, serial_print, serial_println, avo_shell::{echo::echo, shutdown::shutdown_cmd}};
 
@@ -44,6 +45,7 @@ impl AvoShell
         {
             "echo" => {let _ = echo(&self.command_cache);},
             "shutdown" => {shutdown_cmd(&self.command_cache);}
+            "env" => {env::env_cmd(&self.command_cache);},
             _ => {println!("command not recognised!");}
         }
 
