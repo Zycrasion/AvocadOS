@@ -1,5 +1,6 @@
-use x86_64::PhysAddr;
-use x86_64::structures::paging::{OffsetPageTable, Page, FrameAllocator, Size4KiB, PhysFrame, Mapper};
+use bootloader::BootInfo;
+use x86_64::{PhysAddr, instructions};
+use x86_64::structures::paging::{OffsetPageTable, Page, FrameAllocator, Size4KiB, PhysFrame, Mapper, Translate};
 use x86_64::
 {
     structures::paging::PageTable,
@@ -19,7 +20,42 @@ unsafe fn active_level_4_table(physical_memory_offset : VirtAddr) -> &'static mu
     &mut *page_table_ptr
 }
 
-pub unsafe fn init(physical_memory_offset : VirtAddr) -> OffsetPageTable<'static>
+// only changed during init
+pub static PHYS_MEM_OFFSET : Locked<u64> = Locked::new(0);
+pub static MEM_SIZE : Locked<u64> = Locked::new(0);
+
+pub unsafe fn init(boot_info: &'static BootInfo)
+{
+    instructions::interrupts::without_interrupts(
+        || {
+            let mut mem_size = 0;
+            for region in boot_info.memory_map.iter()
+            {
+                let start_addr = region.range.start_addr();
+                let end_addr = region.range.end_addr();
+
+                mem_size += end_addr - start_addr;
+            }
+            println!("MEMORY SIZE: {} KB", mem_size >> 10);
+
+            *MEM_SIZE.lock() = mem_size;
+            *PHYS_MEM_OFFSET.lock() = boot_info.physical_memory_offset;
+
+            let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
+
+            let mut mapper = unsafe { mapper(phys_mem_offset) };
+        
+            let mut frame_allocator = unsafe {
+                BootInfoFrameAllocator::init(&boot_info.memory_map)
+            };
+                        
+            allocator::init_heap(&mut mapper,&mut frame_allocator).expect("heap initialisation failed!");
+        }
+    )
+    
+}
+
+pub unsafe fn mapper(physical_memory_offset : VirtAddr) -> OffsetPageTable<'static>
 {
     let level_4_table = active_level_4_table(physical_memory_offset);
     OffsetPageTable::new(level_4_table, physical_memory_offset)
@@ -55,6 +91,9 @@ unsafe impl FrameAllocator<Size4KiB> for EmptyFrameAllocator
 
 use bootloader::bootinfo::{MemoryMap, MemoryRegionType};
 
+use crate::allocator::Locked;
+use crate::{allocator, println};
+
 pub struct BootInfoFrameAllocator
 {
     memory_map: &'static MemoryMap,
@@ -86,4 +125,16 @@ unsafe impl FrameAllocator<Size4KiB> for BootInfoFrameAllocator
         self.next += 1;
         frame
     }
+}
+
+pub fn virt_to_phys(addr : VirtAddr) -> Option<PhysAddr>
+{
+    let offset = *PHYS_MEM_OFFSET.lock();
+    unsafe {mapper(VirtAddr::new(offset))}.translate_addr(addr)
+}
+
+pub fn phys_to_virt(addr : PhysAddr) -> VirtAddr
+{
+    let offset = *PHYS_MEM_OFFSET.lock();
+    VirtAddr::new(addr.as_u64() + offset)
 }

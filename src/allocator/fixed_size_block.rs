@@ -1,6 +1,6 @@
 use core::alloc::Layout;
 
-const BLOCK_SIZES: &[usize] = &[8,16,32,64,128,256,512,1024,2048];
+const BLOCK_SIZES: &[usize] = &[8,16,32,64,128,256,512,1_024,2_048, 4_096, 8_192, 16_384];
 
 struct ListNode
 {
@@ -41,6 +41,8 @@ impl FixedSizeAllocator
         BLOCK_SIZES.iter().position(|&s| s >= required_block_size)
     }   
 }
+
+use crate::println;
 
 use super::Locked;
 use alloc::alloc::GlobalAlloc;

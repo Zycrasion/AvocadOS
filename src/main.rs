@@ -37,22 +37,7 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     println!("AvocadOS revision {}", 0);
     println!("version: {}.{}.{}", 0, 0, 0);
 
-    avo_os::init();
-
-    let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
-
-    let mut mapper = unsafe { memory::init(phys_mem_offset) };
-
-    let mut frame_allocator = unsafe {
-        BootInfoFrameAllocator::init(&boot_info.memory_map)
-    };
-    
-    let page = Page::containing_address(VirtAddr::new(0));
-    memory::create_example_mapping(page, &mut mapper, &mut frame_allocator);
-
-    let _page_ptr: *mut u64 = page.start_address().as_mut_ptr();
-
-    allocator::init_heap(&mut mapper,&mut frame_allocator).expect("heap initialisation failed!");
+    avo_os::init(boot_info);
 
     println!("type ~ to enter kernel-debug mode");
 

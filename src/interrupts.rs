@@ -122,7 +122,7 @@ extern "x86-interrupt" fn keyboard_interrupt_handler(
 pub enum InterruptIndex
 {
     Timer = PIC1_OFFSET,
-    Keyboard
+    Keyboard,
 }
 
 impl InterruptIndex

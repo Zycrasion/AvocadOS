@@ -1,9 +1,9 @@
 use alloc::{string::{String}};
 use lazy_static::lazy_static;
+use pc_keyboard::KeyCode;
 
 mod echo;
 mod shutdown;
-mod env;
 
 use crate::{println, allocator::Locked, print, vga_buffer::{WRITER, ColorCode, Color}, avo_shell::{echo::echo, shutdown::shutdown_cmd}};
 
@@ -45,7 +45,6 @@ impl AvoShell
         {
             "echo" => {let _ = echo(&self.command_cache);},
             "shutdown" => {shutdown_cmd(&self.command_cache);}
-            "env" => {env::env_cmd(&self.command_cache);},
             _ => {println!("command not recognised!");}
         }
 
@@ -105,4 +104,12 @@ impl Locked<AvoShell>
             _ => shell.on_key(&input)
         }
     }
+
+    // pub fn raw_key_press(&self, input : KeyCode)
+    // {
+    //     match input
+    //     {
+
+    //     }
+    // }
 }

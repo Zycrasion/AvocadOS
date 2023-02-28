@@ -10,6 +10,7 @@
 use core::panic::PanicInfo;
 
 use crate::{serial::{serial_foreground, serial_reset_colour}, vga_buffer::{WRITER, ColorCode, Color}};
+use bootloader::BootInfo;
 
 pub mod serial;
 pub mod vga_buffer;
@@ -18,14 +19,18 @@ pub mod gdt;
 pub mod memory;
 pub mod allocator;
 pub mod avo_shell;
+pub mod acpi;
 
 extern crate alloc;
 
-pub fn init()
+pub fn init(boot_info: &'static BootInfo)
 {
     let colour = WRITER.lock().color_code;
     WRITER.lock().color_code = ColorCode::new(Color::Green, Color::Black);
     println!("Starting AvocadOS Initialisation");
+
+    println!("Initialising Heap And Memory");
+    unsafe {memory::init(boot_info)}
 
     println!("Initialising Global Descriptor Table!");
     gdt::init();
@@ -112,14 +117,14 @@ pub fn exit_qemu(exit_code: QemuExitCode) {
 }
 
 #[cfg(test)]
-use bootloader::{entry_point, BootInfo};
+use bootloader::{entry_point};
 
 #[cfg(test)]
 entry_point!(test_kernel_main);
 
 #[cfg(test)]
-fn test_kernel_main(_boot_info : &'static BootInfo) -> ! {
-    init();
+fn test_kernel_main(boot_info : &'static BootInfo) -> ! {
+    init(boot_info);
     test_main();
     hlt_loop();
 }
